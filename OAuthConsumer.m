@@ -13,7 +13,7 @@
 @property (nonatomic, retain, readwrite) OAConsumer *_consumer;
 @property (nonatomic, retain, readwrite) OAToken *_accessToken;
 @property (nonatomic, retain, readwrite) id<OAuthDataSource> _dataSource;
-@property (nonatomic, assign, readwrite) id<OAuthSession> _loginDelegate;
+@property (nonatomic, assign, readwrite) id<OAuthSessionDelegate> _loginDelegate;
 @property (nonatomic, assign, readwrite) OADataFetcher *_fetcher;
 
 @end
@@ -43,7 +43,7 @@
     [super dealloc];
 }
 
--(void)loginWithHTTPRequestMethod:(OAuthRequestMethod)method params:(NSDictionary *)params delegate:(id<OAuthSession>) delegate
+-(void)loginWithHTTPRequestMethod:(OAuthRequestMethod)method params:(NSDictionary *)params delegate:(id<OAuthSessionDelegate>) delegate
 {
     OAMutableURLRequest *request;
     
