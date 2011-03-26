@@ -64,12 +64,12 @@
     NSString *realm = [_dataSource respondsToSelector:@selector(realm)] ? [_dataSource realm] : nil;
     id<OASignatureProviding, NSObject> signatureProvider = [_dataSource respondsToSelector:@selector(signatureProvider)] ? [_dataSource signatureProvider] : nil;
     
-    request = [[OAMutableURLRequest alloc] initWithURL:[NSURL URLWithString:requestTokenURL] 
+    request = [[[OAMutableURLRequest alloc] initWithURL:[NSURL URLWithString:requestTokenURL] 
                                       consumer:_consumer 
                                          token:nil 
                                          realm:realm
                              signatureProvider:signatureProvider 
-                            authHeaderLocation:authHeaderLocation];
+                            authHeaderLocation:authHeaderLocation] autorelease];
     
     NSString *requestM;
     

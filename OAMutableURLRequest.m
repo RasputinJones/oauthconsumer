@@ -268,6 +268,7 @@ authHeaderLocation:(OAuthAuthHeaderLocation)location
 		CFRelease(nonce);
 	}
     nonce = (NSString *)string;
+    CFRelease(theUUID);
 }
 
 - (NSString *)_signatureBaseString {
