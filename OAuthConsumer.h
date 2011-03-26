@@ -42,8 +42,12 @@
 #import "OAServiceTicket.h"
 #import "OADataFetcher.h"
 
-@protocol OAuthDataSource <NSObject>
+typedef enum {
+    kOAuthRequestMethodGET,
+    kOAuthRequestMethodPOST,
+} OAuthRequestMethod;
 
+@protocol OAuthDataSource <NSObject>
 @required
 -(NSString *) appProviderName;
 -(NSString *) appPrefix;
@@ -55,18 +59,17 @@
 @optional
 -(NSString *) realm;
 -(id<OASignatureProviding, NSObject>)signatureProvider;
-
 @end
 
 @protocol OAuthSession <NSObject>
 
-@required
+@optional
 -(void) loginDidSucceed;
 -(void) loginDidFailWithError:(NSError *) error;
-
-@optional
 -(void) shouldModifyAuthenticationRequest:(OAMutableURLRequest *)request;
 -(void) shouldModifyAuthorizationRequest:(OAMutableURLRequest *)request;
+- (void) apiResponse:(OAServiceTicket *)ticket didFinishWithData:(NSData *)data;
+- (void) apiResponse:(OAServiceTicket *)ticket didFailWithError:(NSError *)error;
 
 @end
 
@@ -75,7 +78,8 @@
 }
 
 - (id)initWithKey:(NSString *)key secret:(NSString *)secret dataSource:(id <OAuthDataSource>) dataSource;
--(void) login:(id<OAuthSession>) delegate;
--(BOOL) handleOpenUrl:(NSURL *) url;
+-(void)loginWithHTTPRequestMethod:(OAuthRequestMethod)method params:(NSDictionary *)params delegate:(id<OAuthSession>) delegate;
+-(void)invokeAPIWithHttpRequestMethod:(OAuthRequestMethod) requestMethod atAPIEndPoint:(NSString *) apiEndpoint withParams:(NSDictionary *)params;
+-(BOOL)handleOpenUrl:(NSURL *) url;
 
 @end

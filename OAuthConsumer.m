@@ -39,12 +39,24 @@
     [super dealloc];
 }
 
--(void) login:(id<OAuthSession>) delegate
+-(void)loginWithHTTPRequestMethod:(OAuthRequestMethod)method params:(NSDictionary *)params delegate:(id<OAuthSession>) delegate
 {
     OAMutableURLRequest *request;
     OADataFetcher *fetcher; 
     
     _loginDelegate = delegate;
+    
+    // if the access token is non nil then we have a previously
+    // saved access token we can use. Since this is OAuth 1.0
+    // the token has an indefinite duration so we do not use 
+    // [_accessToken hasExpired]
+    // TODO: We'll need to incorp OAuth 2.0 support if we want to fold in facebook support here
+    if (_accessToken != nil) {
+        if ([_loginDelegate respondsToSelector:@selector(loginDidSucceed)]) {
+            [_loginDelegate loginDidSucceed];
+        }
+        return;
+    }
     
     NSString *requestTokenURL = [_dataSource requestTokenURL];
     OAuthAuthHeaderLocation authHeaderLocation = [_dataSource authHeaderLocation];
@@ -58,6 +70,30 @@
                                          realm:realm
                              signatureProvider:signatureProvider 
                             authHeaderLocation:authHeaderLocation];
+    
+    NSString *requestM;
+    
+    switch (method) {
+        case kOAuthRequestMethodGET:
+            requestM = @"GET";
+            break;
+            
+        case kOAuthRequestMethodPOST:
+            requestM = @"POST";
+            break;
+    }
+    
+    [request setHTTPMethod:requestM];
+    
+    __block NSMutableArray *tmpArray = [NSMutableArray arrayWithCapacity:[params count]];
+    
+    [params enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop){
+        OARequestParameter *param = [[OARequestParameter alloc] initWithName:key value:obj];
+        [tmpArray addObject:param];
+        [param release];
+    }];
+    
+    [request setParameters:tmpArray];
     
     if ([_loginDelegate respondsToSelector:@selector(shouldModifyAuthenticationRequest:)])  {
         [_loginDelegate shouldModifyAuthenticationRequest:request];
@@ -105,7 +141,9 @@
 
 - (void)requestTokenTicket:(OAServiceTicket *)ticket didFailWithError:(NSError *)error {
     NSLog(@"%@", error);
-    [_loginDelegate loginDidFailWithError:error];
+    if ([_loginDelegate respondsToSelector:@selector(loginDidFailWithError:)]){
+        [_loginDelegate loginDidFailWithError:error];
+    }
 }
 
 - (void)successfulAuthorizationWithPin:(NSString *)pin {
@@ -120,7 +158,7 @@
     id<OASignatureProviding, NSObject> signatureProvider = [_dataSource respondsToSelector:@selector(signatureProvider)] ? [_dataSource signatureProvider] : nil;
     
     request = [[[OAMutableURLRequest alloc] initWithURL:[NSURL URLWithString:accessTokenURL]
-                                               consumer:nil
+                                               consumer:_consumer
                                                   token:_accessToken
                                                   realm:realm
                                       signatureProvider:signatureProvider
@@ -149,7 +187,9 @@
     
     NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:@"Failed Authorization", NSLocalizedDescriptionKey, nil];
     
-    [_loginDelegate loginDidFailWithError:[NSError errorWithDomain:@"OAuth Error" code:1 userInfo:userInfo]];
+    if ([_loginDelegate respondsToSelector:@selector(loginDidFailWithError:)]){    
+        [_loginDelegate loginDidFailWithError:[NSError errorWithDomain:@"OAuth Error" code:1 userInfo:userInfo]];
+    }
 }
 
 - (void)accessTokenTicket:(OAServiceTicket *)ticket didFinishWithData:(NSData *)data {
@@ -171,13 +211,17 @@
                                                               prefix:[_dataSource appPrefix]];
         
         // inform success
-        [_loginDelegate loginDidSucceed];
+        if ([_loginDelegate respondsToSelector:@selector(loginDidSucceed)]) {
+            [_loginDelegate loginDidSucceed];
+        }
     }
 }
 
 - (void)accessTokenTicket:(OAServiceTicket *)ticket didFailWithError:(NSError *)error {
     NSLog(@"%@", error);
-    [_loginDelegate loginDidFailWithError:error];
+    if ([_loginDelegate respondsToSelector:@selector(loginDidFailWithError:)]){
+        [_loginDelegate loginDidFailWithError:error];
+    }
 }
 
 -(BOOL) handleOpenUrl:(NSURL *) url
@@ -211,50 +255,69 @@
 	return YES;
 }
 
-//- (void)sendButtonAction {
-//    NSLog(@"sendButtonAction");
-//    
-//    if (self.accessToken != nil) {
-//        OAMutableURLRequest *request;
-//        OADataFetcher *fetcher;
-//        
-//        request = [[[OAMutableURLRequest alloc] initWithURL:@"http://api.twitter.com/1/statuses/update.json"
-//                                                   consumer:self.consumer
-//                                                      token:self.accessToken
-//                                                      realm:nil
-//                                          signatureProvider:nil
-//                                         authHeaderLocation:kOAuthParamsInHttpUriString] autorelease];
-//        
-//        [request setHTTPMethod:@"POST"];
-//        
-//        OARequestParameter *x1 = [[OARequestParameter alloc] initWithName:@"status" value:self.message.text];
-//        
-//        NSArray *params = [NSArray arrayWithObjects:x1, nil];
-//        [request setParameters:params];
-//        
-//        
-//        fetcher = [[[OADataFetcher alloc] init] autorelease];
-//        [fetcher fetchDataWithRequest:request
-//                             delegate:self
-//                    didFinishSelector:@selector(statusRequestTokenTicket:didFinishWithData:)
-//                      didFailSelector:@selector(statusRequestTokenTicket:didFailWithError:)];
-//        
-//        [x1 release];
-//    }
-//}
-//
-//- (void)statusRequestTokenTicket:(OAServiceTicket *)ticket didFinishWithData:(NSData *)data {
-//    if (ticket.didSucceed) {
-//        NSString *responseBody = [[NSString alloc] initWithData:data
-//                                                       encoding:NSUTF8StringEncoding];
-//        NSLog(@"%@", responseBody);
-//        [responseBody release];
-//    }
-//}
-//
-//- (void)statusRequestTokenTicket:(OAServiceTicket *)ticket didFailWithError:(NSError *)error {
-//    NSLog(@"%@", error);
-//    [_loginDelegate loginDidFailWithError:error];
-//}
+-(void)invokeAPIWithHttpRequestMethod:(OAuthRequestMethod) requestMethod atAPIEndPoint:(NSString *) apiEndpoint withParams:(NSDictionary *)params
+{
+    NSLog(@"sendButtonAction");
+    
+    if (self._accessToken != nil) {
+        OAMutableURLRequest *request;
+        OADataFetcher *fetcher;
+        
+        NSString *realm = [_dataSource respondsToSelector:@selector(realm)] ? [_dataSource realm] : nil;
+        id<OASignatureProviding, NSObject> signatureProvider = [_dataSource respondsToSelector:@selector(signatureProvider)] ? [_dataSource signatureProvider] : nil;
+        
+        request = [[[OAMutableURLRequest alloc] initWithURL:[NSURL URLWithString:apiEndpoint]
+                                                   consumer:_consumer
+                                                      token:_accessToken
+                                                      realm:realm
+                                          signatureProvider:signatureProvider
+                                         authHeaderLocation:kOAuthParamsInHttpUriString] autorelease];
+        
+        NSString *requestM;
+        
+        switch (requestMethod) {
+            case kOAuthRequestMethodGET:
+                requestM = @"GET";
+                break;
+            
+            case kOAuthRequestMethodPOST:
+                requestM = @"POST";
+                break;
+        }
+        
+        [request setHTTPMethod:requestM];
+        
+        __block NSMutableArray *tmpArray = [NSMutableArray arrayWithCapacity:[params count]];
+        
+        [params enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop){
+            OARequestParameter *param = [[OARequestParameter alloc] initWithName:key value:obj];
+            [tmpArray addObject:param];
+            [param release];
+        }];
+        
+        [request setParameters:tmpArray];
+        
+        fetcher = [[[OADataFetcher alloc] init] autorelease];
+        [fetcher fetchDataWithRequest:request
+                             delegate:self
+                    didFinishSelector:@selector(apiResponse:didFinishWithData:)
+                      didFailSelector:@selector(apiResponse:didFailWithError:)];
+    }
+}
+
+- (void) apiResponse:(OAServiceTicket *)ticket didFinishWithData:(NSData *)data
+{
+    if ([_loginDelegate respondsToSelector:@selector(apiResponse:didFinishWithData:)]) {
+        [_loginDelegate apiResponse:ticket didFinishWithData:data];
+    }
+}
+
+- (void) apiResponse:(OAServiceTicket *)ticket didFailWithError:(NSError *)error
+{
+    NSLog(@"%@", error);
+    if ([_loginDelegate respondsToSelector:@selector(apiResponse:didFailWithError:)]){
+        [_loginDelegate apiResponse:ticket didFailWithError:error];
+    }
+}
 
 @end
