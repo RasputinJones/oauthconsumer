@@ -63,9 +63,11 @@ typedef enum {
 
 @protocol OAuthSession <NSObject>
 
-@optional
+@required
 -(void) loginDidSucceed;
 -(void) loginDidFailWithError:(NSError *) error;
+
+@optional
 -(void) shouldModifyAuthenticationRequest:(OAMutableURLRequest *)request;
 -(void) shouldModifyAuthorizationRequest:(OAMutableURLRequest *)request;
 - (void) apiResponse:(OAServiceTicket *)ticket didFinishWithData:(NSData *)data;

@@ -14,12 +14,13 @@
 @property (nonatomic, retain, readwrite) OAToken *_accessToken;
 @property (nonatomic, retain, readwrite) id<OAuthDataSource> _dataSource;
 @property (nonatomic, assign, readwrite) id<OAuthSession> _loginDelegate;
+@property (nonatomic, assign, readwrite) OADataFetcher *_fetcher;
 
 @end
 
 @implementation OAuthConsumer
 
-@synthesize _consumer, _accessToken, _dataSource, _loginDelegate;
+@synthesize _consumer, _accessToken, _dataSource, _loginDelegate, _fetcher;
 
 - (id)initWithKey:(NSString *)key secret:(NSString *)secret dataSource:(id <OAuthDataSource>) dataSource {
     self = [super init];
@@ -28,6 +29,7 @@
         _consumer = [[OAConsumer alloc] initWithKey:key secret:secret];
         _accessToken = [[OAToken alloc] initWithUserDefaultsUsingServiceProviderName:[_dataSource appProviderName] 
                                                                               prefix:[_dataSource appPrefix]];
+        _fetcher = [[OADataFetcher alloc] init];
     }
     return self;
 }
@@ -36,13 +38,14 @@
     [_dataSource release];
     [_accessToken release];
     [_consumer release];
+    [_fetcher cancelRequest];
+    [_fetcher release];
     [super dealloc];
 }
 
 -(void)loginWithHTTPRequestMethod:(OAuthRequestMethod)method params:(NSDictionary *)params delegate:(id<OAuthSession>) delegate
 {
     OAMutableURLRequest *request;
-    OADataFetcher *fetcher; 
     
     _loginDelegate = delegate;
     
@@ -52,9 +55,7 @@
     // [_accessToken hasExpired]
     // TODO: We'll need to incorp OAuth 2.0 support if we want to fold in facebook support here
     if (_accessToken != nil) {
-        if ([_loginDelegate respondsToSelector:@selector(loginDidSucceed)]) {
-            [_loginDelegate loginDidSucceed];
-        }
+        [_loginDelegate loginDidSucceed];
         return;
     }
     
@@ -99,8 +100,7 @@
         [_loginDelegate shouldModifyAuthenticationRequest:request];
     }
     
-    fetcher = [[[OADataFetcher alloc] init] autorelease];
-    [fetcher fetchDataWithRequest:request delegate:self 
+    [_fetcher fetchDataWithRequest:request delegate:self 
                 didFinishSelector:@selector(requestTokenTicket:didFinishWithData:) 
                   didFailSelector:@selector(requestTokenDidFailWithError:)];
 }
@@ -149,7 +149,6 @@
 - (void)successfulAuthorizationWithPin:(NSString *)pin {
     NSLog(@"successfulAuthorizationWithPin:%@", pin);
     OAMutableURLRequest *request;
-    OADataFetcher *fetcher;
     
     NSString *accessTokenURL = [_dataSource accessTokenURL];
     OAuthAuthHeaderLocation authHeaderLocation = [_dataSource authHeaderLocation];
@@ -174,9 +173,7 @@
         [_loginDelegate shouldModifyAuthorizationRequest:request];
     }
     
-    fetcher = [[[OADataFetcher alloc] init] autorelease];
-    
-    [fetcher fetchDataWithRequest:request
+    [_fetcher fetchDataWithRequest:request
                          delegate:self
                 didFinishSelector:@selector(accessTokenTicket:didFinishWithData:)
                   didFailSelector:@selector(accessTokenTicket:didFailWithError:)];
@@ -211,9 +208,7 @@
                                                               prefix:[_dataSource appPrefix]];
         
         // inform success
-        if ([_loginDelegate respondsToSelector:@selector(loginDidSucceed)]) {
-            [_loginDelegate loginDidSucceed];
-        }
+        [_loginDelegate loginDidSucceed];
     }
 }
 
@@ -259,9 +254,8 @@
 {
     NSLog(@"sendButtonAction");
     
-    if (self._accessToken != nil) {
+    if (_accessToken != nil) {
         OAMutableURLRequest *request;
-        OADataFetcher *fetcher;
         
         NSString *realm = [_dataSource respondsToSelector:@selector(realm)] ? [_dataSource realm] : nil;
         id<OASignatureProviding, NSObject> signatureProvider = [_dataSource respondsToSelector:@selector(signatureProvider)] ? [_dataSource signatureProvider] : nil;
@@ -297,8 +291,7 @@
         
         [request setParameters:tmpArray];
         
-        fetcher = [[[OADataFetcher alloc] init] autorelease];
-        [fetcher fetchDataWithRequest:request
+        [_fetcher fetchDataWithRequest:request
                              delegate:self
                     didFinishSelector:@selector(apiResponse:didFinishWithData:)
                       didFailSelector:@selector(apiResponse:didFailWithError:)];
