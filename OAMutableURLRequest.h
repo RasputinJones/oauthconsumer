@@ -32,25 +32,34 @@
 #import "NSMutableURLRequest+Parameters.h"
 #import "NSURL+Base.h"
 
+typedef enum {
+    kOAuthParamsInHttpBody,
+    kOAuthParamsInHttpHeader,
+    kOAuthParamsInHttpUriString,
+} OAuthAuthHeaderLocation;
 
 @interface OAMutableURLRequest : NSMutableURLRequest {
 @protected
     OAConsumer *consumer;
     OAToken *token;
+    NSString *savedUrl;
     NSString *realm;
     NSString *signature;
     id<OASignatureProviding> signatureProvider;
     NSString *nonce;
     NSString *timestamp;
+    OAuthAuthHeaderLocation authLocation;
 }
+
 @property(readonly) NSString *signature;
 @property(readonly) NSString *nonce;
 
-- (id)initWithURL:(NSURL *)aUrl
+- (id)initWithURL:(NSURL *) aUrl
 		 consumer:(OAConsumer *)aConsumer
 			token:(OAToken *)aToken
             realm:(NSString *)aRealm
-signatureProvider:(id<OASignatureProviding, NSObject>)aProvider;
+signatureProvider:(id<OASignatureProviding, NSObject>)aProvider
+authHeaderLocation:(OAuthAuthHeaderLocation)location;
 
 - (id)initWithURL:(NSURL *)aUrl
 		 consumer:(OAConsumer *)aConsumer
@@ -58,8 +67,10 @@ signatureProvider:(id<OASignatureProviding, NSObject>)aProvider;
             realm:(NSString *)aRealm
 signatureProvider:(id<OASignatureProviding, NSObject>)aProvider
             nonce:(NSString *)aNonce
-        timestamp:(NSString *)aTimestamp;
+        timestamp:(NSString *)aTimestamp
+authHeaderLocation:(OAuthAuthHeaderLocation)location;
 
 - (void)prepare;
+- (void)setParameters:(NSArray *)parameters;
 
 @end

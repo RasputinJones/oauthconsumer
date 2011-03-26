@@ -13,6 +13,7 @@
 #import "OAServiceTicket.h"
 #import "OAMutableURLRequest.h"
 #import "OACall.h"
+#import "NSMutableURLRequest+Parameters.h"
 
 @interface OACall (Private)
 
@@ -118,18 +119,20 @@
 - (void)perform:(OAConsumer *)consumer
 		  token:(OAToken *)token
 		  realm:(NSString *)realm
-	   delegate:(NSObject <OACallDelegate> *)aDelegate
+    authHeaderLocation:(OAuthAuthHeaderLocation)location
+        delegate:(NSObject <OACallDelegate> *)aDelegate
 	didFinish:(SEL)finished
 
 {
 	delegate = aDelegate;
 	finishedSelector = finished;
 
-	request = [[OAMutableURLRequest alloc] initWithURL:url
+	request = [[NSMutableURLRequest alloc] initWithURL:url
 											  consumer:consumer
 												token:token
 												 realm:realm
-									 signatureProvider:nil];
+									 signatureProvider:nil
+                                    authHeaderLocation:location];
 	if(method) {
 		[request setHTTPMethod:method];
 	}
@@ -139,7 +142,7 @@
 	}
 	if (self.files) {
 		for (NSString *key in self.files) {
-			[request attachFileWithName:@"file" filename:NSLocalizedString(@"Photo.jpg", @"") data:[self.files objectForKey:key]];
+            [request attachFileWithName:@"file" filename:NSLocalizedString(@"Photo.jpg", @"") contentType:@"image/jpg" data:[self.files objectForKey:key]];
 		}
 	}
 	fetcher = [[OADataFetcher alloc] init];

@@ -35,6 +35,7 @@
 	NSString *oauthBase;
 	NSString *realm;
 	NSString *callback;
+    OAuthAuthHeaderLocation location;
 	NSObject <OATokenManagerDelegate> *delegate;
 	NSMutableArray *calls;
 	NSMutableArray *selectors;
@@ -46,7 +47,7 @@
 - (id)init;
 
 - (id)initWithConsumer:(OAConsumer *)aConsumer token:(OAToken *)aToken oauthBase:(const NSString *)base
-				 realm:(const NSString *)aRealm callback:(const NSString *)aCallback
+				 realm:(const NSString *)aRealm authHeaderLocation:(OAuthAuthHeaderLocation)location callback:(const NSString *)aCallback
 			  delegate:(NSObject <OATokenManagerDelegate> *)aDelegate;
 
 - (void)authorizedToken:(const NSString *)key;

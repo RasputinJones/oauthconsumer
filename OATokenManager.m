@@ -43,12 +43,13 @@
 							token:nil
 						oauthBase:nil
 							realm:nil
+               authHeaderLocation:0
 						 callback:nil
 						 delegate:nil];
 }
 
 - (id)initWithConsumer:(OAConsumer *)aConsumer token:(OAToken *)aToken oauthBase:(const NSString *)base
-				 realm:(const NSString *)aRealm callback:(const NSString *)aCallback
+				 realm:(const NSString *)aRealm authHeaderLocation:(OAuthAuthHeaderLocation)aLocation callback:(const NSString *)aCallback
 			  delegate:(NSObject <OATokenManagerDelegate> *)aDelegate {
 
 	[super init];
@@ -60,6 +61,7 @@
 	oauthBase = [base copy];
 	realm = [aRealm copy];
 	callback = [aCallback copy];
+    location = aLocation;
 	delegate = aDelegate;
 	calls = [[NSMutableArray alloc] init];
 	selectors = [[NSMutableArray alloc] init];
@@ -235,6 +237,7 @@
 	[call perform:consumer
 			token:initialToken
 			realm:realm
+         authHeaderLocation:location
 		 delegate:self
 		didFinish:@selector(requestTokenReceived:body:)];
 	
@@ -275,6 +278,7 @@
 	[call perform:consumer
 			token:reqToken
 			realm:realm
+    authHeaderLocation:location
 		 delegate:self
 		didFinish:@selector(accessTokenReceived:body:)];
 }
@@ -297,6 +301,7 @@
 	[call perform:consumer
 			token:acToken
 			realm:realm
+    authHeaderLocation:location
 		 delegate:self
 		didFinish:@selector(accessTokenReceived:body:)];	
 }
@@ -332,6 +337,7 @@
 	[aCall perform:consumer
 			 token:acToken
 			 realm:realm
+    authHeaderLocation:location
 		  delegate:self
 		  didFinish:@selector(callFinished:body:)];
 }

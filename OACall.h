@@ -7,6 +7,8 @@
 //	bynotes.com
 
 #import <Foundation/Foundation.h>
+#import "OAMutableURLRequest.h"
+#import "NSMutableURLRequest+Parameters.h"
 
 @class OAProblem;
 @class OACall;
@@ -32,7 +34,7 @@
 	NSObject <OACallDelegate> *delegate;
 	SEL finishedSelector;
 	OADataFetcher *fetcher;
-	OAMutableURLRequest *request;
+	NSMutableURLRequest *request;
 	OAServiceTicket *ticket;
 }
 
@@ -57,6 +59,7 @@
 - (void)perform:(OAConsumer *)consumer
 		  token:(OAToken *)token
 		  realm:(NSString *)realm
+    authHeaderLocation:(OAuthAuthHeaderLocation)location
 	   delegate:(NSObject <OACallDelegate> *)aDelegate
 	  didFinish:(SEL)finished;
 
