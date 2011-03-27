@@ -8,6 +8,7 @@
 
 #import "TwitterDataSource.h"
 #import "OAMutableURLRequest.h"
+#import "Defines.h"
 
 @implementation TwitterDataSource
 
@@ -25,12 +26,12 @@
 
 -(NSString *) appProviderName
 {
-    return @"appProvider";
+    return kOAuthTwitterAppProvider;
 }
 
 -(NSString *) appPrefix
 {
-    return @"TwitterApp";
+    return kOAuthTwitterAppPrefix;
 }
 
 -(OAuthAuthHeaderLocation) authHeaderLocation
