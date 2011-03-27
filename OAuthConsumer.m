@@ -58,7 +58,7 @@
     // saved access token we can use. Since this is OAuth 1.0
     // the token has an indefinite duration so we do not use 
     // [_accessToken hasExpired]
-    // TODO: We'll need to incorp OAuth 2.0 support if we want to fold in facebook support here
+    // TODO: We'll need to incorp OAuth 2.0 support in order to fold in facebook support
     if ([self isSessionValid]) {
         [_loginDelegate loginDidSucceed];
         return;
@@ -145,14 +145,14 @@
 }
 
 - (void)requestTokenTicket:(OAServiceTicket *)ticket didFailWithError:(NSError *)error {
-    NSLog(@"%@", error);
+    // NSLog(@"%@", error);
     if ([_loginDelegate respondsToSelector:@selector(loginDidFailWithError:)]){
         [_loginDelegate loginDidFailWithError:error];
     }
 }
 
 - (void)successfulAuthorizationWithPin:(NSString *)pin {
-    NSLog(@"successfulAuthorizationWithPin:%@", pin);
+    // NSLog(@"successfulAuthorizationWithPin:%@", pin);
     OAMutableURLRequest *request;
     
     NSString *accessTokenURL = [_dataSource accessTokenURL];
@@ -185,7 +185,7 @@
 }
 
 - (void)failedAuthorization {
-    NSLog(@"failedAuthorization");
+    // NSLog(@"failedAuthorization");
     
     NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:@"Failed Authorization", NSLocalizedDescriptionKey, nil];
     
@@ -196,7 +196,7 @@
 
 - (void)accessTokenTicket:(OAServiceTicket *)ticket didFinishWithData:(NSData *)data {
     if (ticket.didSucceed) {
-        NSLog(@"accessTokenSuccess");
+        // NSLog(@"accessTokenSuccess");
         
         NSString *responseBody = [[NSString alloc] initWithData:data
                                                        encoding:NSUTF8StringEncoding];
@@ -218,7 +218,7 @@
 }
 
 - (void)accessTokenTicket:(OAServiceTicket *)ticket didFailWithError:(NSError *)error {
-    NSLog(@"%@", error);
+    // NSLog(@"%@", error);
     if ([_loginDelegate respondsToSelector:@selector(loginDidFailWithError:)]){
         [_loginDelegate loginDidFailWithError:error];
     }
@@ -244,11 +244,11 @@
     NSString *pin = [response objectForKey:@"oauth_verifier"];
     
     if ([pin length] > 0) {
-        NSLog(@"pin %@", pin);
+        // NSLog(@"pin %@", pin);
         [self successfulAuthorizationWithPin:pin];
     }
     else {
-        NSLog(@"no pin");
+        // NSLog(@"no pin");
         [self failedAuthorization];
     }
     
@@ -257,7 +257,7 @@
 
 -(void)invokeAPIWithHttpRequestMethod:(OAuthRequestMethod) requestMethod atAPIEndPoint:(NSString *) apiEndpoint withParams:(NSDictionary *)params
 {
-    NSLog(@"sendButtonAction");
+    // NSLog(@"sendButtonAction");
     
     if (_accessToken != nil) {
         OAMutableURLRequest *request;
@@ -312,7 +312,7 @@
 
 - (void) apiResponse:(OAServiceTicket *)ticket didFailWithError:(NSError *)error
 {
-    NSLog(@"%@", error);
+    // NSLog(@"%@", error);
     if ([_loginDelegate respondsToSelector:@selector(apiResponse:didFailWithError:)]){
         [_loginDelegate apiResponse:ticket didFailWithError:error];
     }
