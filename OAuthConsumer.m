@@ -43,6 +43,11 @@
     [super dealloc];
 }
 
+- (BOOL) isSessionValid
+{
+    return (_accessToken != nil);
+}
+
 -(void)loginWithHTTPRequestMethod:(OAuthRequestMethod)method params:(NSDictionary *)params delegate:(id<OAuthSessionDelegate>) delegate
 {
     OAMutableURLRequest *request;
@@ -54,7 +59,7 @@
     // the token has an indefinite duration so we do not use 
     // [_accessToken hasExpired]
     // TODO: We'll need to incorp OAuth 2.0 support if we want to fold in facebook support here
-    if (_accessToken != nil) {
+    if ([self isSessionValid]) {
         [_loginDelegate loginDidSucceed];
         return;
     }

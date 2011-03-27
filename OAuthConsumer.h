@@ -79,6 +79,7 @@ typedef enum {
     
 }
 
+- (BOOL)isSessionValid;
 - (id)initWithKey:(NSString *)key secret:(NSString *)secret dataSource:(id <OAuthDataSource>) dataSource;
 -(void)loginWithHTTPRequestMethod:(OAuthRequestMethod)method params:(NSDictionary *)params delegate:(id<OAuthSessionDelegate>) delegate;
 -(void)invokeAPIWithHttpRequestMethod:(OAuthRequestMethod) requestMethod atAPIEndPoint:(NSString *) apiEndpoint withParams:(NSDictionary *)params;
