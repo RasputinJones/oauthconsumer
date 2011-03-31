@@ -60,7 +60,7 @@
     // [_accessToken hasExpired]
     // TODO: We'll need to incorp OAuth 2.0 support in order to fold in facebook support
     if ([self isSessionValid]) {
-        [_loginDelegate loginDidSucceed];
+        [_loginDelegate oAuthLoginDidSucceed];
         return;
     }
     
@@ -147,7 +147,7 @@
 - (void)requestTokenTicket:(OAServiceTicket *)ticket didFailWithError:(NSError *)error {
     // NSLog(@"%@", error);
     if ([_loginDelegate respondsToSelector:@selector(loginDidFailWithError:)]){
-        [_loginDelegate loginDidFailWithError:error];
+        [_loginDelegate oAuthLoginDidFailWithError:error];
     }
 }
 
@@ -190,7 +190,7 @@
     NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:@"Failed Authorization", NSLocalizedDescriptionKey, nil];
     
     if ([_loginDelegate respondsToSelector:@selector(loginDidFailWithError:)]){    
-        [_loginDelegate loginDidFailWithError:[NSError errorWithDomain:@"OAuth Error" code:1 userInfo:userInfo]];
+        [_loginDelegate oAuthLoginDidFailWithError:[NSError errorWithDomain:@"OAuth Error" code:1 userInfo:userInfo]];
     }
 }
 
@@ -213,14 +213,14 @@
                                                               prefix:[_dataSource appPrefix]];
         
         // inform success
-        [_loginDelegate loginDidSucceed];
+        [_loginDelegate oAuthLoginDidSucceed];
     }
 }
 
 - (void)accessTokenTicket:(OAServiceTicket *)ticket didFailWithError:(NSError *)error {
     // NSLog(@"%@", error);
     if ([_loginDelegate respondsToSelector:@selector(loginDidFailWithError:)]){
-        [_loginDelegate loginDidFailWithError:error];
+        [_loginDelegate oAuthLoginDidFailWithError:error];
     }
 }
 

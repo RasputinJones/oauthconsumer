@@ -173,8 +173,8 @@ authHeaderLocation:(OAuthAuthHeaderLocation)location
 }
 
 - (void)prepare {
-    // sign
-   NSLog(@"Base string is: %@", [self _signatureBaseString]);
+   // sign
+   // NSLog(@"Base string is: %@", [self _signatureBaseString]);
    signature = [signatureProvider signClearText:[self _signatureBaseString]
                                       withSecret:[NSString stringWithFormat:@"%@&%@",
                                                   consumer.secret,
