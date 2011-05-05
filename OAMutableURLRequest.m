@@ -192,7 +192,7 @@ authHeaderLocation:(OAuthAuthHeaderLocation)location
         case kOAuthParamsInHttpUriString:
             newUrl = [NSString stringWithFormat:@"%@?%@", [[self URL] URLStringWithoutQuery], [self oAuthParmsInHTTPUriString:signature]];
             [savedUrl release];
-            savedUrl = [newUrl copy];
+            savedUrl = [newUrl retain];
             [self setURL:[NSURL URLWithString:savedUrl]];
             break;
     }
